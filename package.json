@@ -1,0 +1,50 @@
+{
+  "name": "@ch-studio/tauri-app-template",
+  "version": "0.1.0",
+  "private": false,
+  "license": "LGPL-3.0-or-later",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "tauri:build": "vue-cli-service tauri:build",
+    "tauri:serve": "vue-cli-service tauri:serve",
+    "test": "yarn --cwd webdriver/webdriverio/ test",
+    "postinstall": "yarn --cwd webdriver/webdriverio/"
+  },
+  "dependencies": {
+    "core-js": "^3.21.0",
+    "vue": "^3.2.31"
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "^1.0.0-rc.1",
+    "@tauri-apps/cli": "^1.0.0-rc.5",
+    "@vue/cli-plugin-babel": "^4.5.15",
+    "@vue/cli-plugin-eslint": "^4.5.15",
+    "@vue/cli-service": "^4.5.15",
+    "@vue/compiler-sfc": "^3.2.31",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-vue": "^8.5.0",
+    "vue-cli-plugin-tauri": "^1.0.0-rc.1"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
