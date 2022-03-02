@@ -2,7 +2,7 @@
   import {listen as tauriListen} from '@tauri-apps/api/event';
   import api_call from "@/lib/utils/api_call";
 
-  const extToMime = {
+  const allowedFileExtensions = {
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
     'png': 'image/png',
@@ -25,11 +25,22 @@
   }
 
   export default {
+    /**
+     * This function is executed when Vue mounts the HelloWorld component in the DOM.
+     * We store listeners in an array in memory so we can "unlisten" when the
+     *   component is unmounted from the DOM.
+     * This avoids executing the same callback multiple times when component is unmounted
+     *   and re-mounted.
+     */
     async mounted() {
       this.tauriListeners.push(await tauriListen('tauri://file-drop', this.dropFile));
       this.tauriListeners.push(await tauriListen('tauri://file-drop-hover', this.dropHover));
       this.tauriListeners.push(await tauriListen('tauri://file-drop-cancelled', this.dropCancel));
     },
+
+    /**
+     * When component is unmounted from the DOM, we just delete the different listeners.
+     */
     unmounted() {
       this.tauriListeners.forEach((unlisten) => {
         console.info({unlisten});
@@ -37,42 +48,64 @@
       });
       this.tauriListeners = [];
     },
+
     data() {
       return {
         tauriListeners: [],
-        isOnArea: false,
         isDroppingFile: false,
         files: [],
       }
     },
+
     methods: {
-      upload: function() {
+      browse: function() {
         console.info(this);
+        // Not yet implemented
       },
-      enterArea: function () {this.isOnArea = true;},
-      leaveArea: function () {this.isOnArea = false;},
+
+      /**
+       * These events are triggered by Tauri when the user tries to
+       *   drag a file from their OS and drop it inside the Tauri app.
+       */
+      dropHover: function () {this.isDroppingFile = true;},
+      dropCancel: function () {this.isDroppingFile = false;},
       dropFile: function (event) {
         const _this = this;
-        console.info('Dropping file');
-        console.info(event);
+
         let alert_given = false;
+
+        this.isDroppingFile = false;
+
         event.payload.forEach(async (filename) => {
+          // Prevents calling "alert()" once per file.
           if (alert_given) { return; }
-          const regex = new RegExp(`.+\\.(${Object.keys(extToMime).join('|')})$`, 'gi');
-          if (!filename.match(regex)) {
-            alert('Only image files are supported.');
+
+          const fileExtensionRegex = new RegExp(`.+\\.(${Object.keys(allowedFileExtensions).join('|')})$`, 'gi');
+          const fileExt = filename.replace(fileExtensionRegex, '$1');
+
+          if (!allowedFileExtensions[fileExt]) {
+            alert(`Unsupported file ${filename}.\nAllowed extensions are the following:\n${Object.keys(allowedFileExtensions).join(', ')}`);
             alert_given = true;
             return;
           }
-          const fileExt = filename.replace(regex, '$1');
+
+          /**
+           * This function calls the application backend (built in Rust).
+           * Check the "src-tauri/main.rs" file for more information
+           *   about the "get_file_content" command.
+           * TL;DR: it reads the file from disk and returns an array of
+           *   numbers corresponding to the binary representation of the file.
+           */
           api_call("get_file_content", {path: filename})
             .then((fileContent) => {
               const fileBinaryData = new Uint8Array(fileContent);
               const b64encoded = Buffer.from(fileBinaryData).toString('base64');
+
+              //
               _this.files.push({
                 filename: filename,
                 name: basenameFromPath(filename)+'.'+fileExt,
-                src: `data:${extToMime[fileExt]};base64, ${b64encoded}`
+                src: `data:${allowedFileExtensions[fileExt]};base64, ${b64encoded}`
               });
             })
             .catch((e) => {
@@ -81,25 +114,23 @@
             })
           ;
         });
-        this.isDroppingFile = false;
-        console.info({files: this.files});
       },
-      dropHover: function () {this.isDroppingFile = true;},
-      dropCancel: function () {this.isDroppingFile = false;},
     }
   };
 </script>
 
 <template>
   <h1>Drag&drop test</h1>
-  <p>isOnArea: {{ isOnArea }}</p>
-  <p>isDroppingFile: {{ isDroppingFile }}</p>
   <div class="drag-area" v-bind:class="{ active: isDroppingFile }" @mouseenter="enterArea" @mouseover="enterArea" @mouseleave="leaveArea">
+
     <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
     <header>Drag & Drop to Upload File</header>
     <span>OR</span>
-    <button type="button" @click="upload">Browse File</button>
+
+    <button type="button" @click="browse">Browse File</button>
+
     <input type="file" hidden>
+
     <ul id="files-list">
       <li v-for="file in this.files" :key="file.filename">
         <img width="40" v-bind:src="file.src" v-bind:alt="file.filename">
