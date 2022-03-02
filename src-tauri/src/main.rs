@@ -3,8 +3,18 @@
   windows_subsystem = "windows"
 )]
 
+use std::fs::read;
+
 fn main() {
   tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![
+        get_file_content
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+}
+
+#[tauri::command]
+fn get_file_content(path: String) -> Vec<u8> {
+    read(path).expect("Could not read file")
 }
