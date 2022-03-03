@@ -26,7 +26,7 @@
 
   export default {
     /**
-     * This function is executed when Vue mounts the HelloWorld component in the DOM.
+     * This function is executed when Vue mounts the DragDrop component in the DOM.
      * We store listeners in an array in memory so we can "unlisten" when the
      *   component is unmounted from the DOM.
      * This avoids executing the same callback multiple times when component is unmounted
@@ -141,16 +141,6 @@
 </template>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.drag-area, h1, p {
-  font-family: "Calibri", sans-serif;
-}
-
 .drag-area {
   background-color: #25286d;
   border: 2px dashed #ddd;
