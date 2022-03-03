@@ -54,7 +54,10 @@ jobs:
               run: cargo fetch --manifest-path=src-tauri/Cargo.toml
 
             - name: Build application
-              run: yarn tauri:build
+              run: |
+                  yarn tauri:build
+                  # Cross-platform "ls" equivalent
+                  node -e "const fs=require('fs');fs.readdirSync('./src-tauri/target/release/').forEach(file => console.info(file));"
 
             - name: Test application (linux)
               if: matrix.os == 'ubuntu-latest'
